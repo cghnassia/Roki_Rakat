@@ -1,0 +1,251 @@
+package com.example.rokirakat;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import com.example.bigbosslo52.R;
+
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.StrictMode;
+import android.app.Activity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+public class BigBossLo52MainActivity extends Activity {
+
+	// url to make request
+	private static String url = "http://192.168.1.11/test.json";
+	 
+	// JSON Node names
+	private static final String TAG_CONTACTS = "contacts";
+	private static final String TAG_ID = "id";
+	private static final String TAG_NAME = "name";
+	private static final String TAG_EMAIL = "email";
+	private static final String TAG_ADDRESS = "address";
+	private static final String TAG_GENDER = "gender";
+	private static final String TAG_PHONE = "phone";
+	private static final String TAG_PHONE_MOBILE = "mobile";
+	private static final String TAG_PHONE_HOME = "home";
+	private static final String TAG_PHONE_OFFICE = "office";
+	 
+	// contacts JSONArray
+	JSONArray contacts = null;
+	private String resultJSON;
+	JSONParser jParser;
+	ListView lv;
+	
+	// Hashmap for ListView
+    ArrayList<HashMap<String, String>> contactList = new ArrayList<HashMap<String, String>>();
+
+    
+    //For XML
+ // All static variables
+    static final String URL = "http://192.168.1.11/test.xml";
+    // XML node keys
+    static final String KEY_ITEM = "item"; // parent node
+    static final String KEY_ID = "id";
+    static final String KEY_NAME = "name";
+    static final String KEY_COST = "cost";
+    static final String KEY_DESC = "description";
+    
+	ListView lv2;
+	
+    ArrayList<HashMap<String, String>> menuItems = new ArrayList<HashMap<String, String>>();
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_big_boss_lo52_main);
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+     
+        if (android.os.Build.VERSION.SDK_INT > 9) { StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); StrictMode.setThreadPolicy(policy); }
+        
+        // Creating JSON Parser instance
+        jParser = new JSONParser();
+        
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.big_boss_lo52_main, menu);
+        return true;
+    }
+    
+    public void getData2(View view)
+    {
+   	 XMLParser parser = new XMLParser();
+     String xml = parser.getXmlFromUrl(URL); // getting XML
+     Document doc = parser.getDomElement(xml); // getting DOM element
+
+     NodeList nl = doc.getElementsByTagName(KEY_ITEM);
+     // looping through all item nodes <item>
+     for (int i = 0; i < nl.getLength(); i++) {
+         // creating new HashMap
+         HashMap<String, String> map = new HashMap<String, String>();
+         Element e = (Element) nl.item(i);
+         // adding each child node to HashMap key => value
+         map.put(KEY_ID, parser.getValue(e, KEY_ID));
+         map.put(KEY_NAME, parser.getValue(e, KEY_NAME));
+         map.put(KEY_COST, "Rs." + parser.getValue(e, KEY_COST));
+         map.put(KEY_DESC, parser.getValue(e, KEY_DESC));
+
+         // adding HashList to ArrayList
+         menuItems.add(map);
+     }
+     
+     /**
+      * Updating parsed XML data into ListView
+      * */
+	 ArrayAdapter adapter2 = new ArrayAdapter<HashMap<String, String>>(this, 
+		        android.R.layout.simple_list_item_1, menuItems);
+	 lv2  =(ListView)findViewById(R.id.listView2);
+	 lv2.setAdapter(adapter2);
+    }
+    
+    public void getData(View view) throws JSONException, InterruptedException, ExecutionException
+    {
+    	// getting JSON string from URL
+        //JSONObject json = jParser.getJSONFromUrl(url);
+    	JSONObject json = getJSON(url);
+    	
+    	 try {
+             // Getting Array of Contacts
+             contacts = json.getJSONArray(TAG_CONTACTS);
+              
+             // looping through All Contacts
+             for(int i = 0; i < contacts.length(); i++){
+                 JSONObject c = contacts.getJSONObject(i);
+                  
+                 // Storing each json item in variable
+                 String id = c.getString(TAG_ID);
+                 String name = c.getString(TAG_NAME);
+                 String email = c.getString(TAG_EMAIL);
+                 String address = c.getString(TAG_ADDRESS);
+                 String gender = c.getString(TAG_GENDER);
+                  
+                 // Phone number is agin JSON Object
+                 JSONObject phone = c.getJSONObject(TAG_PHONE);
+                 String mobile = phone.getString(TAG_PHONE_MOBILE);
+                 String home = phone.getString(TAG_PHONE_HOME);
+                 String office = phone.getString(TAG_PHONE_OFFICE);
+                  
+                 // creating new HashMap
+                 HashMap<String, String> map = new HashMap<String, String>();
+                  
+                 // adding each child node to HashMap key => value
+                 map.put(TAG_ID, id);
+                 map.put(TAG_NAME, name);
+                 map.put(TAG_EMAIL, email);
+                 map.put(TAG_PHONE_MOBILE, mobile);
+  
+                 // adding HashList to ArrayList
+                 contactList.add(map);
+             }
+         } catch (JSONException e) {
+             e.printStackTrace();
+         }
+          
+          
+         /**
+          * Updating parsed JSON data into ListView
+          * */
+    	 ArrayAdapter adapter = new ArrayAdapter<HashMap<String, String>>(this, 
+    		        android.R.layout.simple_list_item_1, contactList);
+    	 lv  =(ListView)findViewById(R.id.listView1);
+    	 lv.setAdapter(adapter);
+    	 
+    }
+    
+    public JSONObject getJSON(String url) throws JSONException, InterruptedException, ExecutionException {
+        Parser parser = new Parser();
+        parser.execute(url);
+        resultJSON = parser.get();
+        JSONObject json=null;
+        // try parse the string to a JSON object
+        try {
+        	json = new JSONObject(resultJSON);
+        } catch (JSONException e) {
+            Log.e("JSON Parser", "Error parsing data " + e.toString());
+        }
+        return json;
+    }
+
+    private class Parser extends AsyncTask<String, Void, String> {
+        private InputStream is = null;
+        private String json = "";
+    	
+        @Override
+        protected String doInBackground(String... urls) {
+            for (String url : urls) {
+                // Making HTTP request
+                try {
+                    // defaultHttpClient
+                    DefaultHttpClient httpClient = new DefaultHttpClient();
+                    HttpPost httpPost = new HttpPost(url);
+         
+                    HttpResponse httpResponse = httpClient.execute(httpPost);
+                    HttpEntity httpEntity = httpResponse.getEntity();
+                    is = httpEntity.getContent();           
+         
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                 
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(
+                            is, "iso-8859-1"), 8);
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    is.close();
+                    json = sb.toString();
+                } catch (Exception e) {
+                    Log.e("Buffer Error", "Error converting result " + e.toString());
+                }
+          }
+          return json;
+        }
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+        }
+    }
+    
+    
+}

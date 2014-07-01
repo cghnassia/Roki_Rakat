@@ -1,0 +1,7 @@
+serveur.egg-info/PKG-INFO
+serveur.egg-info/SOURCES.txt
+serveur.egg-info/dependency_links.txt
+serveur.egg-info/entry_points.txt
+serveur.egg-info/not-zip-safe
+serveur.egg-info/requires.txt
+serveur.egg-info/top_level.txt
